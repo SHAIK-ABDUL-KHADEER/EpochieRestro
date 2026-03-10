@@ -47,4 +47,14 @@ if (process.env.NODE_ENV === 'production') {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} using MongoDB Atlas`);
+
+  // Keep-alive ping for Render Free Tier (every 14 minutes)
+  const url = process.env.RENDER_EXTERNAL_URL;
+  if (url) {
+    setInterval(() => {
+      fetch(`${url}/api/health`)
+        .then(() => console.log('Keep-alive ping successful'))
+        .catch(err => console.error('Keep-alive ping failed', err));
+    }, 14 * 60 * 1000);
+  }
 });

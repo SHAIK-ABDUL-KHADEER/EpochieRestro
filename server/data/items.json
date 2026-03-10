@@ -1,0 +1,34 @@
+[
+  {
+    "_id": "1dd744fd-fcf3-4895-8f2b-3860051c438d",
+    "createdAt": "2026-03-10T06:09:15.181Z",
+    "name": "chicken tandoori",
+    "price": 199,
+    "description": "2 pieces of spicy tandoori chicken",
+    "tags": [
+      "spicy",
+      "chicken",
+      "tandoori",
+      "starter"
+    ],
+    "categoryId": "45051579-a4ce-445c-8bd7-009dec4e9185",
+    "restaurantId": "195d8ab3-0b29-4de4-9d6f-a70f458d968d",
+    "embedding": []
+  },
+  {
+    "_id": "7c8c9a95-0661-4f99-a0cb-ef5b8a30e30d",
+    "createdAt": "2026-03-10T06:09:58.099Z",
+    "name": "butter nan",
+    "price": 59,
+    "description": "yummy butter nan ",
+    "tags": [
+      "nan",
+      "butter",
+      "roti",
+      "breads"
+    ],
+    "categoryId": "45051579-a4ce-445c-8bd7-009dec4e9185",
+    "restaurantId": "195d8ab3-0b29-4de4-9d6f-a70f458d968d",
+    "embedding": []
+  }
+]

@@ -34,12 +34,12 @@ app.use('/api/auth', require('./routes/auth'));
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client_new/build')));
+  app.use(express.static(path.join(__dirname, '../client/build')));
 
   app.get('*', (req, res) => {
     // Only handle GET requests that don't start with /api
     if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(__dirname, '../client_new/build', 'index.html'));
+      res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
     }
   });
 }

@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "scripts": {
         "install-server": "npm install --prefix server",
-        "install-client": "npm install --prefix client_new",
-        "build-client": "npm run build --prefix client_new",
+        "install-client": "npm install --prefix client",
+        "build-client": "npm run build --prefix client",
         "build": "npm run install-server && npm run install-client && npm run build-client",
         "start": "node server/server.js"
     }

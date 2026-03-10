@@ -1,0 +1,187 @@
+/* Modern Minimalistic UI - Black, White, Neon Yellow */
+:root {
+  --primary: #dfff00;
+  /* Neon Yellow */
+  --primary-hover: #ccff00;
+  --bg-dark: #000000;
+  --bg-card: #0a0a0a;
+  --text-main: #ffffff;
+  --text-muted: #888888;
+  --border-light: #222222;
+  --success: #dfff00;
+  --warning: #ff3333;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Sharp grid background for modern feel */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: linear-gradient(var(--border-light) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.2;
+  z-index: -1;
+  pointer-events: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+}
+
+/* Base minimal utility */
+.glass {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+}
+
+/* Layout */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+}
+
+/* Typography */
+.text-gradient {
+  color: var(--primary);
+  text-shadow: 0 0 10px rgba(223, 255, 0, 0.3);
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Forms & Inputs */
+.input-field {
+  width: 100%;
+  padding: 1rem;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.input-field:focus {
+  border-color: var(--primary);
+  box-shadow: 4px 4px 0 var(--primary);
+  transform: translate(-2px, -2px);
+}
+
+.input-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Neo-brutalist Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--bg-dark);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  box-shadow: 4px 4px 0 white;
+  transform: translate(-2px, -2px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: white;
+  border-color: var(--border-light);
+}
+
+.btn-secondary:hover {
+  border-color: white;
+  box-shadow: 4px 4px 0 var(--primary);
+  transform: translate(-2px, -2px);
+}
+
+/* Card layout */
+.grid-container {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.card {
+  padding: 2rem;
+  transition: all 0.3s;
+  border: 1px solid var(--border-light);
+}
+
+.card:hover {
+  border-color: var(--text-muted);
+}

@@ -1,88 +1,85 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const MenuCategory = require('../models/MenuCategory');
+const MenuItem = require('../models/MenuItem');
 const { generateEmbedding } = require('../services/gemini');
 
-const CAT = 'categories';
-const ITEM = 'items';
+// --- CATEGORIES ---
 
 // Get all categories for a restaurant
-router.get('/:restaurantId/categories', (req, res) => {
+router.get('/:restaurantId/categories', async (req, res) => {
     try {
-        const categories = db.find(CAT, { restaurantId: req.params.restaurantId });
-        // sort by order if needed, but simple return is fine
+        const categories = await MenuCategory.find({ restaurantId: req.params.restaurantId }).sort('order');
         res.json(categories);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to fetch categories' });
     }
 });
 
-// Create category
-router.post('/:restaurantId/categories', (req, res) => {
+// Create a category
+router.post('/:restaurantId/categories', async (req, res) => {
     try {
-        const newCategory = { ...req.body, restaurantId: req.params.restaurantId, order: 0 };
-        const saved = db.insert(CAT, newCategory);
-        res.status(201).json(saved);
+        const category = new MenuCategory({
+            ...req.body,
+            restaurantId: req.params.restaurantId
+        });
+        await category.save();
+        res.json(category);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to create category' });
     }
 });
+
+// --- ITEMS ---
 
 // Get items for a category
-router.get('/categories/:categoryId/items', (req, res) => {
+router.get('/categories/:categoryId/items', async (req, res) => {
     try {
-        const items = db.find(ITEM, { categoryId: req.params.categoryId });
-        // Strip embeddings array from response
-        const safeItems = items.map(item => {
-            const { embedding, ...rest } = item;
-            return rest;
-        });
-        res.json(safeItems);
+        const items = await MenuItem.find({ categoryId: req.params.categoryId });
+        res.json(items);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to fetch items' });
     }
 });
 
-// Create item WITH RAG Ingestion
+// Create item (with RAG Embedding)
 router.post('/categories/:categoryId/items', async (req, res) => {
     try {
-        const itemData = req.body;
+        const { name, description, price, tags, restaurantId } = req.body;
 
-        // 1. Generate text snippet for the embeddings vector
-        const textToEmbed = `${itemData.name} - ${itemData.description || ''} - Tags: ${(itemData.tags || []).join(', ')}`;
+        // Generate embedding for RAG
+        let embedding = [];
+        try {
+            embedding = await generateEmbedding(`${name} - ${description}`);
+        } catch (e) {
+            console.error("Embedding generation failed, continuing without one.");
+        }
 
-        // 2. Call Gemini to get the vector
-        const embedding = await generateEmbedding(textToEmbed);
-
-        // 3. Save to Local JSON
-        // We also need the restaurant ID explicitly to make the chat search easier
-        const category = db.findById(CAT, req.params.categoryId);
-
-        const newItem = {
-            ...itemData,
+        const item = new MenuItem({
+            restaurantId,
             categoryId: req.params.categoryId,
-            restaurantId: category.restaurantId,
-            embedding: embedding
-        };
+            name,
+            description,
+            price,
+            tags,
+            embedding
+        });
 
-        const saved = db.insert(ITEM, newItem);
-
-        // Omit embedding from response
-        const { embedding: e, ...responseItem } = saved;
-        res.status(201).json(responseItem);
+        await item.save();
+        res.json(item);
     } catch (err) {
         console.error(err);
-        res.status(400).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to create item' });
     }
 });
 
 // Delete item
-router.delete('/items/:id', (req, res) => {
+router.delete('/items/:itemId', async (req, res) => {
     try {
-        db.findByIdAndDelete(ITEM, req.params.id);
+        await MenuItem.findByIdAndDelete(req.params.itemId);
         res.json({ success: true });
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to delete item' });
     }
 });
 

@@ -1,57 +1,58 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
-const { generateEmbedding, generateChatResponse, cosineSimilarity } = require('../services/gemini');
+const MenuItem = require('../models/MenuItem');
+const { generateEmbedding, getChatResponse } = require('../services/gemini');
+
+// Helper for cosine similarity
+function cosineSimilarity(vecA, vecB) {
+    const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+    const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+    const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+    return dotProduct / (magA * magB);
+}
 
 router.post('/:restaurantId', async (req, res) => {
     try {
         const { query } = req.body;
         const { restaurantId } = req.params;
 
-        if (!query) return res.status(400).json({ error: 'Query is required' });
+        // 1. Generate query embedding
+        const queryVector = await generateEmbedding(query);
 
-        // 1. Generate text embedding for the user's question
-        const queryEmbedding = await generateEmbedding(query);
+        // 2. Fetch all menu items for this restaurant
+        const items = await MenuItem.find({ restaurantId });
 
-        // 2. Fetch all menu items for THIS restaurant
-        const allItems = db.find('items', { restaurantId });
-        const allCategories = db.find('categories', { restaurantId });
+        // 3. Find top 5 similar items locally
+        // (Using local similarity as Atlas Vector Search requires index setup)
+        const scoredItems = items
+            .filter(i => i.embedding && i.embedding.length > 0)
+            .map(item => ({
+                item,
+                score: cosineSimilarity(queryVector, item.embedding)
+            }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5);
 
-        if (allItems.length === 0) {
-            return res.json({ response: "This restaurant hasn't added any menu items yet." });
-        }
+        // 4. Construct Context String
+        const context = scoredItems
+            .map(s => `${s.item.name}: ${s.item.description} ($${s.item.price})`)
+            .join('\n');
 
-        // 3. Calculate cosine similarity
-        const scoredItems = allItems.map(item => {
-            // Find category name
-            const category = allCategories.find(c => c._id === item.categoryId);
-            const categoryName = category ? category.name : 'Unknown';
+        // 5. Get AI Response
+        const prompt = `You are a helpful restaurant assistant for ${restaurantId}. 
+          Below are relevant items from our menu:
+          ${context}
+          
+          User Question: ${query}
+          
+          Provide a friendly and concise answer based ONLY on the provided menu context.`;
 
-            const score = cosineSimilarity(queryEmbedding, item.embedding);
+        const response = await getChatResponse(prompt);
+        res.json({ response });
 
-            return {
-                _id: item._id,
-                name: item.name,
-                description: item.description,
-                price: item.price,
-                categoryName: categoryName,
-                score: score
-            };
-        });
-
-        // 4. Sort by highest similarity
-        scoredItems.sort((a, b) => b.score - a.score);
-
-        // 5. Take the top 10 most relevant items to form the context window
-        const topContextItems = scoredItems.slice(0, 10);
-
-        // 6. Generate final response
-        const finalResponseText = await generateChatResponse(query, topContextItems);
-
-        res.json({ response: finalResponseText });
     } catch (err) {
-        console.error('Chat error:', err);
-        res.status(500).json({ error: err.message, response: 'Sorry, the AI is currently unavailable.' });
+        console.error(err);
+        res.status(500).json({ error: 'Chat processing failed' });
     }
 });
 

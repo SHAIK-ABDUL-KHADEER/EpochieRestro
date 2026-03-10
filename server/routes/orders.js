@@ -1,43 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const Order = require('../models/Order');
 
-const COLLECTION = 'orders';
-
-// Get all orders for yesterday/today (kitchen dashboard polling)
-router.get('/:restaurantId', (req, res) => {
+// Get orders for a restaurant (Kitchen view)
+router.get('/:restaurantId', async (req, res) => {
     try {
-        const orders = db.find(COLLECTION, { restaurantId: req.params.restaurantId });
-        // sort newest first
-        orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const orders = await Order.find({ restaurantId: req.params.restaurantId }).sort('-createdAt');
         res.json(orders);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to fetch orders' });
     }
 });
 
-// Place new order
-router.post('/', (req, res) => {
+// Place a new order
+router.post('/', async (req, res) => {
     try {
-        const newOrder = {
-            ...req.body,
-            status: 'Received'
-        };
-        const saved = db.insert(COLLECTION, newOrder);
-        res.status(201).json(saved);
+        const order = new Order(req.body);
+        await order.save();
+        res.json(order);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Failed to place order' });
     }
 });
 
 // Update order status
-router.put('/:id/status', (req, res) => {
+router.put('/:orderId/status', async (req, res) => {
     try {
-        const { status } = req.body;
-        const order = db.findByIdAndUpdate(COLLECTION, req.params.id, { status });
+        const order = await Order.findByIdAndUpdate(req.params.orderId, { status: req.body.status }, { new: true });
         res.json(order);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to update order status' });
     }
 });
 

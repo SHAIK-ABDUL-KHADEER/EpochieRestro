@@ -1,67 +1,46 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
-
-const COLLECTION = 'restaurants';
+const Restaurant = require('../models/Restaurant');
 
 // Get all restaurants
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
     try {
-        const restaurants = db.readData(COLLECTION);
+        const restaurants = await Restaurant.find();
         res.json(restaurants);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to fetch restaurants' });
     }
 });
 
-// Get restaurant by slug
-router.get('/:slug', (req, res) => {
+// Get single restaurant by slug
+router.get('/:slug', async (req, res) => {
     try {
-        const restaurant = db.findOne(COLLECTION, { slug: req.params.slug });
-        if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+        const restaurant = await Restaurant.findOne({ slug: req.params.slug });
+        if (!restaurant) return res.status(404).json({ error: 'Not found' });
         res.json(restaurant);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to fetch restaurant' });
     }
 });
 
-// Create new restaurant
-router.post('/', (req, res) => {
+// Create restaurant
+router.post('/', async (req, res) => {
     try {
-        const newRestaurant = {
-            ...req.body,
-            logo: req.body.logo || '',
-            address: req.body.address || '',
-            contactDetails: req.body.contactDetails || '',
-            settings: {
-                enableOrdering: true,
-                enableAIAssistant: true,
-                enableImageDisplay: true,
-                enableRecommendations: true,
-                enableVoiceAssistant: true
-            }
-        };
-
-        // check unique slug
-        if (db.findOne(COLLECTION, { slug: req.body.slug })) {
-            return res.status(400).json({ error: 'Slug already exists' });
-        }
-
-        const savedRestaurant = db.insert(COLLECTION, newRestaurant);
-        res.status(201).json(savedRestaurant);
-    } catch (err) {
-        console.error(err);
-        res.status(400).json({ error: err.message });
-    }
-});
-
-// Update restaurant settings
-router.put('/:id', (req, res) => {
-    try {
-        const restaurant = db.findByIdAndUpdate(COLLECTION, req.params.id, req.body);
+        const restaurant = new Restaurant(req.body);
+        await restaurant.save();
         res.json(restaurant);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        res.status(500).json({ error: 'Failed to create restaurant' });
+    }
+});
+
+// Update settings
+router.put('/:id', async (req, res) => {
+    try {
+        const restaurant = await Restaurant.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(restaurant);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update restaurant' });
     }
 });
 

@@ -2,8 +2,10 @@
     "name": "epochie-monorepo",
     "version": "1.0.0",
     "scripts": {
-        "postinstall": "cd server && npm install && cd ../client_new && npm install",
-        "build": "cd client_new && npm run build",
+        "install-server": "npm install --prefix server",
+        "install-client": "npm install --prefix client_new",
+        "build-client": "npm run build --prefix client_new",
+        "build": "npm run install-server && npm run install-client && npm run build-client",
         "start": "node server/server.js"
     }
 }

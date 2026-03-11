@@ -4,6 +4,23 @@ const API_URL = process.env.NODE_ENV === 'production'
     ? '/api'
     : 'http://localhost:5000/api';
 
+// Add Loading Interceptors for Custom Cursor
+axios.interceptors.request.use((config) => {
+    document.body.classList.add('cursor-loading');
+    return config;
+}, (error) => {
+    document.body.classList.remove('cursor-loading');
+    return Promise.reject(error);
+});
+
+axios.interceptors.response.use((response) => {
+    document.body.classList.remove('cursor-loading');
+    return response;
+}, (error) => {
+    document.body.classList.remove('cursor-loading');
+    return Promise.reject(error);
+});
+
 export const api = {
     // Restaurants
     getRestaurants: () => axios.get(`${API_URL}/restaurants`),

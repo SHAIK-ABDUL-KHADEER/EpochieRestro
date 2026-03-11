@@ -215,6 +215,20 @@ h2[id].is-sticky {
   background: var(--text-muted);
 }
 
+/* Custom Cursor Controls */
+* {
+    cursor: none !important;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.plate-loader {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
 /* Hide scrollbar for Menu Book popup */
 .menu-book-popup::-webkit-scrollbar {
   display: none;

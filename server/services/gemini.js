@@ -1,24 +1,24 @@
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+if (!process.env.GEMINI_API_KEY) {
+    console.error('❌ GEMINI_API_KEY is missing in environment variables!');
+}
+
+const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 /**
  * Generate an embedding for a string of text.
- * Used when ingestion new menu items.
  */
 async function generateEmbedding(text) {
     try {
-        const response = await genai.models.embedContent({
-            model: 'text-embedding-004',
-            contents: text,
-        });
-        // The embedding is typically in response.embeddings[0].values
-        // For the REST api the response format is embeddings[0].values, let's just make sure we extract it
-        return response.embeddings[0].values;
+        if (!process.env.GEMINI_API_KEY) return [];
+        const model = genai.getGenerativeModel({ model: "text-embedding-004" });
+        const result = await model.embedContent(text);
+        return result.embedding.values;
     } catch (error) {
-        console.error('Error generating embedding:', error);
+        console.error('Error generating embedding:', error.message);
         return [];
     }
 }
@@ -28,24 +28,30 @@ async function generateEmbedding(text) {
  */
 async function getChatResponse(prompt) {
     try {
+        if (!process.env.GEMINI_API_KEY) {
+            return "AI Chat is currently unavailable. Please check the server configuration (GEMINI_API_KEY).";
+        }
         const genModel = genai.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const result = await genModel.generateContent(prompt);
         return result.response.text();
     } catch (error) {
-        console.error('Error generating chat response:', error);
-        return "I'm sorry, I'm having trouble connecting to the menu right now.";
+        console.error('Error generating chat response:', error.message);
+        if (error.message.includes('API key')) {
+            return "I'm having trouble with my API key. Please ensure it's set correctly in the environment.";
+        }
+        return "I'm sorry, I'm having trouble connecting to the menu right now. Please try again in a moment.";
     }
 }
 
 /**
- * Cosine similarity helper for local MongoDB RAG implementation
+ * Cosine similarity helper
  */
 function cosineSimilarity(vecA, vecB) {
     if (!vecA || !vecB || vecA.length === 0 || vecB.length === 0) return 0;
     let dotProduct = 0;
     let normA = 0;
     let normB = 0;
-    for (let i = 0; i < vecA.length; i++) {
+    for (let i = 0; i < Math.min(vecA.length, vecB.length); i++) {
         dotProduct += vecA[i] * vecB[i];
         normA += vecA[i] * vecA[i];
         normB += vecB[i] * vecB[i];

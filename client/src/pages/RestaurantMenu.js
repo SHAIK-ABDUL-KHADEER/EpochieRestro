@@ -183,20 +183,22 @@ export default function RestaurantMenu() {
         }
     };
 
-    const handleChatSubmit = async (e) => {
+    const handleChat = async (e) => {
         e.preventDefault();
-        if (!chatInput.trim()) return;
+        if (!chatInput.trim() || isChatLoading) return;
 
-        const query = chatInput;
+        const userMsg = { role: 'user', content: chatInput };
+        setChatHistory(prev => [...prev, userMsg]);
         setChatInput('');
-        setChatHistory(prev => [...prev, { role: 'user', content: query }]);
         setIsChatLoading(true);
 
         try {
-            const { data } = await api.chat(restaurant._id, query);
+            const { data } = await api.chat(restaurant._id, chatInput);
             setChatHistory(prev => [...prev, { role: 'ai', content: data.response }]);
         } catch (e) {
-            setChatHistory(prev => [...prev, { role: 'ai', content: "Sorry, I'm having trouble connecting." }]);
+            console.error('AI Chat Error:', e);
+            const errorMsg = e.response?.data?.error || e.message || "I'm having trouble connecting to the menu right now.";
+            setChatHistory(prev => [...prev, { role: 'ai', content: `⚠️ Error: ${errorMsg}` }]);
         } finally {
             setIsChatLoading(false);
         }

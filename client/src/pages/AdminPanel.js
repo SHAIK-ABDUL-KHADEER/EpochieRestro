@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { QRCodeSVG } from 'qrcode.react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, Settings, QrCode as QrIcon } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Settings, QrCode as QrIcon, ArrowLeft } from 'lucide-react';
 
 export default function AdminPanel() {
     const [restaurants, setRestaurants] = useState([]);
@@ -97,9 +97,14 @@ export default function AdminPanel() {
     return (
         <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <LayoutDashboard color="var(--primary)" /> Platform Admin
-                </h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <Link to="/" className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }}>
+                        <ArrowLeft size={18} /> Home
+                    </Link>
+                    <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
+                        <LayoutDashboard color="var(--primary)" /> Admin
+                    </h1>
+                </div>
                 <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                     <PlusCircle size={18} /> New Restaurant
                 </button>

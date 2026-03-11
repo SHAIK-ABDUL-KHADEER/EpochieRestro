@@ -3,6 +3,8 @@ import Landing from './pages/Landing';
 import AdminPanel from './pages/AdminPanel';
 import RestaurantMenu from './pages/RestaurantMenu';
 import KitchenDashboard from './pages/KitchenDashboard';
+import { PrivacyPolicy, TermsOfService, RefundPolicy } from './pages/Policies';
+import Footer from './components/Footer';
 
 function App() {
   return (
@@ -14,8 +16,12 @@ function App() {
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/restaurants/:slug" element={<RestaurantMenu />} />
             <Route path="/kitchens/:slug" element={<KitchenDashboard />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/refund" element={<RefundPolicy />} />
           </Routes>
         </main>
+        <Footer />
       </div>
     </BrowserRouter>
   );

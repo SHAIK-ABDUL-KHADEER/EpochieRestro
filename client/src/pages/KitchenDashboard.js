@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
-import { UtensilsCrossed, Clock, CheckCircle, LayoutDashboard } from 'lucide-react';
+import { Clock, CheckCircle, ChefHat, ArrowLeft, UtensilsCrossed } from 'lucide-react';
 
 export default function KitchenDashboard() {
     const { slug } = useParams();
@@ -52,19 +52,15 @@ export default function KitchenDashboard() {
     if (!restaurant) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading kitchen...</div>;
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <div>
-                    <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-                        <UtensilsCrossed color="var(--primary)" /> {restaurant.name} Kitchen
-                    </h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Live Order Dashboard</p>
-                </div>
-
-                <Link to="/admin" className="btn btn-secondary">
-                    <LayoutDashboard size={18} /> Admin
+        <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <Link to="/admin" className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }}>
+                    <ArrowLeft size={18} /> Admin
                 </Link>
-            </header>
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
+                    <ChefHat color="var(--primary)" /> {restaurant?.name || 'Kitchen'} Logs
+                </h1>
+            </div>
 
             <div className="grid-container" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
                 {orders.map(order => (

@@ -208,7 +208,13 @@ export default function RestaurantMenu() {
         <div style={{ paddingBottom: '100px', maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
 
             {/* Header Info */}
-            <div className="card glass animate-fade-in" style={{ margin: '1rem', textAlign: 'center', borderTop: '4px solid var(--primary)' }}>
+            <div className="card glass animate-fade-in" style={{ margin: '1rem', textAlign: 'center', borderTop: '4px solid var(--primary)', position: 'relative' }}>
+                <button 
+                    onClick={() => window.history.back()} 
+                    style={{ position: 'absolute', top: '1rem', left: '1rem', background: 'transparent', color: 'var(--text-muted)' }}
+                >
+                    <ArrowLeft size={20} />
+                </button>
                 <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{restaurant.name}</h1>
                 <p style={{ color: 'var(--text-muted)' }}>{restaurant.description}</p>
             </div>

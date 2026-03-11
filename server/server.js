@@ -51,10 +51,24 @@ app.listen(PORT, () => {
   // Keep-alive ping for Render Free Tier (every 14 minutes)
   const url = process.env.RENDER_EXTERNAL_URL;
   if (url) {
-    setInterval(() => {
-      fetch(`${url}/api/health`)
-        .then(() => console.log('Keep-alive ping successful'))
-        .catch(err => console.error('Keep-alive ping failed', err));
+    console.log(`Keep-alive configured for: ${url}`);
+    setInterval(async () => {
+      try {
+        const response = await fetch(`${url}/api/health`);
+        if (response.ok) {
+          console.log('Keep-alive ping successful');
+        } else {
+          console.warn(`Keep-alive ping returned status: ${response.status}`);
+        }
+      } catch (err) {
+        // Silently handle timeouts or network errors to avoid log spam
+        // These are common during Render's internal network shifts
+        if (err.code === 'UND_ERR_CONNECT_TIMEOUT' || err.code === 'ECONNREFUSED') {
+          console.log('Keep-alive ping timed out (Internal network skip)');
+        } else {
+          console.error('Keep-alive ping unexpected error:', err.message);
+        }
+      }
     }, 14 * 60 * 1000);
   }
 });

@@ -45,7 +45,17 @@ router.get('/categories/:categoryId/items', async (req, res) => {
 // Create item (with RAG Embedding)
 router.post('/categories/:categoryId/items', async (req, res) => {
     try {
-        const { name, description, price, tags, restaurantId } = req.body;
+        let { name, description, price, tags, restaurantId } = req.body;
+
+        // Fallback: Infer restaurantId from category if not provided
+        if (!restaurantId) {
+            const category = await MenuCategory.findById(req.params.categoryId);
+            if (category) {
+                restaurantId = category.restaurantId;
+            } else {
+                return res.status(404).json({ error: 'Category not found' });
+            }
+        }
 
         // Generate embedding for RAG
         let embedding = [];

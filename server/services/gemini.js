@@ -24,32 +24,13 @@ async function generateEmbedding(text) {
 }
 
 /**
- * Generate a chat response using Gemini RAG.
+ * Generate a chat response using Gemini.
  */
-async function generateChatResponse(userQuery, contextItems) {
+async function getChatResponse(prompt) {
     try {
-        // Construct the context from the retrieved items
-        const contextString = contextItems.map(item =>
-            `${item.name} (Category: ${item.categoryName || 'Unknown'}) - Price: $${item.price} - Desc: ${item.description || 'N/A'}`
-        ).join('\n');
-
-        const prompt = `
-You are a helpful and polite AI assistant for a restaurant. 
-Your goal is to answer customer questions about the menu, give recommendations, and provide information.
-Use the following menu items as your ONLY source of truth. Do not invent items that are not in the context.
-
-MENU ITEMS AVAILABLE:
-${contextString}
-
-Customer Question: "${userQuery}"
-`;
-
-        const response = await genai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-
-        return response.text;
+        const genModel = genai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const result = await genModel.generateContent(prompt);
+        return result.response.text();
     } catch (error) {
         console.error('Error generating chat response:', error);
         return "I'm sorry, I'm having trouble connecting to the menu right now.";
@@ -74,6 +55,6 @@ function cosineSimilarity(vecA, vecB) {
 
 module.exports = {
     generateEmbedding,
-    generateChatResponse,
+    getChatResponse,
     cosineSimilarity
 };

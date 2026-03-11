@@ -26,6 +26,10 @@ export default function RestaurantMenu() {
     const [myOrders, setMyOrders] = useState([]);
 
     // AI Chat State
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [chatHistory, setChatHistory] = useState([]);
+    const [chatInput, setChatInput] = useState('');
+    const [isChatLoading, setIsChatLoading] = useState(false);
     const [isMenuBookOpen, setIsMenuBookOpen] = useState(false);
     const chatEndRef = useRef(null);
     const categoryRefs = useRef({});

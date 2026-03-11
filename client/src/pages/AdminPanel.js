@@ -77,6 +77,7 @@ export default function AdminPanel() {
             const tagsArray = itemForm.tags.split(',').map(t => t.trim()).filter(Boolean);
             await api.createItem(activeCategoryId, {
                 ...itemForm,
+                restaurantId: selectedRest._id,
                 price: Number(itemForm.price),
                 tags: tagsArray
             });

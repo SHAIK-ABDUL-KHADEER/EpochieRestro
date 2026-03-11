@@ -18,19 +18,26 @@ async function generateEmbedding(text) {
             console.error('❌ Skipping embedding: GEMINI_API_KEY is null');
             return [];
         }
-        const model = genai.getGenerativeModel({ model: "text-embedding-004" });
-        const result = await model.embedContent({
-            content: { parts: [{ text }] },
-            taskType: "RETRIEVAL_DOCUMENT",
-        });
-        
-        if (result && result.embedding && result.embedding.values) {
+        // Try text-embedding-004 first, fallback to embedding-001 if needed
+        let model;
+        try {
+            model = genai.getGenerativeModel({ model: "text-embedding-004" });
+            const result = await model.embedContent({
+                content: { parts: [{ text }] },
+                taskType: "RETRIEVAL_DOCUMENT",
+            });
+            if (result && result.embedding && result.embedding.values) {
+                return result.embedding.values;
+            }
+        } catch (innerError) {
+            console.warn('⚠️ text-embedding-004 failed, trying fallback model:', innerError.message);
+            model = genai.getGenerativeModel({ model: "embedding-001" });
+            const result = await model.embedContent(text);
             return result.embedding.values;
         }
-        console.warn('⚠️ Gemini returned empty embedding for text:', text.substring(0, 30));
         return [];
     } catch (error) {
-        console.error('❌ Error generating embedding:', error.message);
+        console.error('❌ Final Embedding Error:', error.message);
         return [];
     }
 }
@@ -43,7 +50,8 @@ async function getChatResponse(prompt) {
         if (!process.env.GEMINI_API_KEY) {
             return "AI Chat is currently unavailable. Please check the server configuration (GEMINI_API_KEY).";
         }
-        const genModel = genai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        // Switch to Gemini 2.0 Flash as per user requirement
+        const genModel = genai.getGenerativeModel({ model: 'gemini-2.0-flash' });
         const result = await genModel.generateContent(prompt);
         const response = await result.response;
         return response.text();

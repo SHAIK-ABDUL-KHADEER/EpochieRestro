@@ -51,7 +51,7 @@ async function getChatResponse(prompt) {
             return "AI Chat is currently unavailable. Please check the server configuration (GEMINI_API_KEY).";
         }
         // Switch to Gemini 2.0 Flash as per user requirement
-        const genModel = genai.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const genModel = genai.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const result = await genModel.generateContent(prompt);
         const response = await result.response;
         return response.text();

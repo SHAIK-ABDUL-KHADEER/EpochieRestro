@@ -457,7 +457,7 @@ export default function RestaurantMenu() {
                         <div ref={chatEndRef} />
                     </div>
 
-                    <form onSubmit={handleChatSubmit} className="glass" style={{ padding: '1rem', borderTop: '1px solid var(--border-light)', display: 'flex', gap: '0.5rem' }}>
+                    <form onSubmit={handleChat} className="glass" style={{ padding: '1rem', borderTop: '1px solid var(--border-light)', display: 'flex', gap: '0.5rem' }}>
                         <input
                             className="input-field"
                             style={{ flex: 1, borderRadius: '2rem' }}

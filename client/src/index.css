@@ -185,3 +185,37 @@ h6 {
 .card:hover {
   border-color: var(--text-muted);
 }
+
+/* Swiggy-style Sticky Header Shadow */
+h2[id] {
+  transition: all 0.3s ease;
+}
+
+h2[id].is-sticky {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Hide scrollbar for Menu Book popup */
+.menu-book-popup::-webkit-scrollbar {
+  display: none;
+}

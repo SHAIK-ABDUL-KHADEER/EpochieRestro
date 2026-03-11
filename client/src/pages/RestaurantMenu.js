@@ -26,11 +26,9 @@ export default function RestaurantMenu() {
     const [myOrders, setMyOrders] = useState([]);
 
     // AI Chat State
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [chatHistory, setChatHistory] = useState([]);
-    const [chatInput, setChatInput] = useState('');
-    const [isChatLoading, setIsChatLoading] = useState(false);
+    const [isMenuBookOpen, setIsMenuBookOpen] = useState(false);
     const chatEndRef = useRef(null);
+    const categoryRefs = useRef({});
 
     useEffect(() => {
         loadMenu();
@@ -78,19 +76,37 @@ export default function RestaurantMenu() {
         }
     };
 
-    const addToCart = (item) => {
+    const updateQuantity = (item, delta) => {
         setCart(prev => {
             const existing = prev.find(i => i._id === item._id);
             if (existing) {
-                return prev.map(i => i._id === item._id ? { ...i, qty: i.qty + 1 } : i);
+                const newQty = existing.qty + delta;
+                if (newQty <= 0) return prev.filter(i => i._id !== item._id);
+                return prev.map(i => i._id === item._id ? { ...i, qty: newQty } : i);
             }
-            return [...prev, { ...item, qty: 1 }];
+            if (delta > 0) return [...prev, { ...item, qty: 1 }];
+            return prev;
         });
-        setIsCartOpen(true);
     };
 
-    const removeFromCart = (itemId) => {
-        setCart(prev => prev.filter(i => i._id !== itemId));
+    const getItemQuantity = (itemId) => {
+        const item = cart.find(i => i._id === itemId);
+        return item ? item.qty : 0;
+    };
+
+    const scrollToCategory = (catId) => {
+        const element = document.getElementById(catId);
+        if (element) {
+            const offset = 80; // height of sticky header or padding
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth"
+            });
+        }
+        setIsMenuBookOpen(false);
     };
 
     const currentTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -196,33 +212,94 @@ export default function RestaurantMenu() {
             {/* Categories & Items Loop */}
             <div style={{ padding: '0 1rem' }}>
                 {categories.map(cat => (
-                    <div key={cat._id} className="animate-fade-in" style={{ marginBottom: '3rem' }}>
-                        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-light)' }}>
+                    <div key={cat._id} id={cat._id} className="animate-fade-in" style={{ marginBottom: '3rem' }}>
+                        <h2 style={{ 
+                            fontSize: '1.5rem', 
+                            marginBottom: '1rem', 
+                            padding: '1rem 0',
+                            position: 'sticky',
+                            top: 0,
+                            backgroundColor: 'var(--bg-dark)',
+                            zIndex: 10,
+                            borderBottom: '2px solid var(--primary)'
+                        }}>
                             {cat.name}
                         </h2>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {(items[cat._id] || []).map(item => (
-                                <div key={item._id} className="card glass flex items-center" style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem' }}>
-                                    <div style={{ flex: 1, paddingRight: '1rem' }}>
-                                        <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{item.name}</h3>
-                                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{item.description}</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            {(items[cat._id] || []).map(item => {
+                                const qty = getItemQuantity(item._id);
+                                return (
+                                    <div key={item._id} className="card glass flex items-center" style={{ 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', 
+                                        padding: '1.25rem',
+                                        borderLeft: qty > 0 ? '4px solid var(--primary)' : '1px solid var(--border-light)'
+                                    }}>
+                                        <div style={{ flex: 1, paddingRight: '1rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                                                {item.tags?.includes('Veg') && <span style={{ width: '12px', height: '12px', border: '2px solid #48c479', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: '6px', height: '6px', backgroundColor: '#48c479', borderRadius: '50%' }}></span></span>}
+                                                {item.tags?.includes('Non-Veg') && <span style={{ width: '12px', height: '12px', border: '2px solid #e43b4f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: '6px', height: '6px', backgroundColor: '#e43b4f', borderRadius: '50%' }}></span></span>}
+                                                <h3 style={{ fontSize: '1.1rem' }}>{item.name}</h3>
+                                            </div>
+                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem', lineBreak: 'anywhere' }}>{item.description}</p>
+                                            <span style={{ fontWeight: '700', fontSize: '1.1rem' }}>₹{item.price}</span>
+                                        </div>
 
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            <span style={{ fontWeight: '600', color: 'var(--primary)' }}>${item.price.toFixed(2)}</span>
-                                            {item.tags?.map(t => (
-                                                <span key={t} style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '0.1rem 0.4rem', borderRadius: '1rem', color: 'var(--warning)' }}>
-                                                    {t}
-                                                </span>
-                                            ))}
+                                        <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
+                                            {item.image ? (
+                                                <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                                            ) : (
+                                                <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <ShoppingCart size={24} style={{ opacity: 0.2 }} />
+                                                </div>
+                                            )}
+                                            
+                                            <div style={{ 
+                                                position: 'absolute', 
+                                                bottom: '-12px', 
+                                                left: '50%', 
+                                                transform: 'translateX(-50%)',
+                                                width: '80px',
+                                                height: '32px',
+                                                backgroundColor: 'var(--bg-card)',
+                                                border: '1px solid var(--primary)',
+                                                borderRadius: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                                                overflow: 'hidden'
+                                            }}>
+                                                {qty > 0 ? (
+                                                    <div style={{ display: 'flex', width: '100%', height: '100%' }}>
+                                                        <button 
+                                                            onClick={() => updateQuantity(item, -1)}
+                                                            style={{ flex: 1, border: 'none', background: 'transparent', color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.2rem' }}
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <span style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{qty}</span>
+                                                        <button 
+                                                            onClick={() => updateQuantity(item, 1)}
+                                                            style={{ flex: 1, border: 'none', background: 'transparent', color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.2rem' }}
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => updateQuantity(item, 1)}
+                                                        style={{ width: '100%', height: '100%', border: 'none', background: 'transparent', color: 'var(--primary)', fontWeight: '900', fontSize: '0.8rem' }}
+                                                    >
+                                                        ADD
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <button className="btn btn-secondary" onClick={() => addToCart(item)} style={{ borderRadius: '50%', width: '40px', height: '40px', padding: 0 }}>
-                                        +
-                                    </button>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 ))}
@@ -230,6 +307,68 @@ export default function RestaurantMenu() {
 
             {/* Floating Action Buttons */}
             <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', zIndex: 40 }}>
+                
+                {/* Menu Book Button */}
+                <button
+                    className="btn animate-fade-in"
+                    onClick={() => setIsMenuBookOpen(!isMenuBookOpen)}
+                    style={{ 
+                        width: 'auto', 
+                        padding: '0 1.5rem', 
+                        height: '50px', 
+                        borderRadius: '25px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.75rem', 
+                        backgroundColor: 'var(--primary)', 
+                        color: 'var(--bg-dark)',
+                        fontWeight: 'bold',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                        border: 'none'
+                    }}
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    MENU
+                </button>
+
+                {/* Floating Menu Book Popup */}
+                {isMenuBookOpen && (
+                    <div className="glass animate-fade-in" style={{ 
+                        position: 'absolute', 
+                        bottom: '70px', 
+                        right: 0, 
+                        width: '240px', 
+                        maxHeight: '400px', 
+                        overflowY: 'auto',
+                        padding: '1rem',
+                        borderRadius: '1rem',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.8)'
+                    }}>
+                        <h4 style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem' }}>Categories</h4>
+                        {categories.map(cat => (
+                            <button 
+                                key={cat._id}
+                                onClick={() => scrollToCategory(cat._id)}
+                                style={{ 
+                                    width: '100%', 
+                                    textAlign: 'left', 
+                                    padding: '0.75rem', 
+                                    background: 'transparent', 
+                                    color: 'var(--text-main)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    borderBottom: '1px solid rgba(255,255,255,0.05)'
+                                }}
+                            >
+                                <span>{cat.name}</span>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{items[cat._id]?.length || 0}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 {user && (
                     <button
@@ -339,11 +478,15 @@ export default function RestaurantMenu() {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     {cart.map(item => (
                                         <div key={item._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <div>
-                                                <p style={{ fontWeight: '500' }}>{item.qty}x {item.name}</p>
-                                                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>${(item.price * item.qty).toFixed(2)}</p>
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ fontWeight: '500' }}>{item.name}</p>
+                                                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>${item.price.toFixed(2)}</p>
                                             </div>
-                                            <button style={{ color: 'var(--primary)', background: 'transparent' }} onClick={() => removeFromCart(item._id)}>Remove</button>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.05)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+                                                <button style={{ color: 'var(--primary)', background: 'transparent', fontSize: '1.2rem', fontWeight: 'bold' }} onClick={() => updateQuantity(item, -1)}>-</button>
+                                                <span style={{ minWidth: '20px', textAlign: 'center' }}>{item.qty}</span>
+                                                <button style={{ color: 'var(--primary)', background: 'transparent', fontSize: '1.2rem', fontWeight: 'bold' }} onClick={() => updateQuantity(item, 1)}>+</button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
